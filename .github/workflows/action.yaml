@@ -9,13 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        if: github.event.pull_request.merged == true
         uses: actions/checkout@v2
 
       - name: Check for label
         run: |
           LABEL_NAME="Regression Testing"  # Replace with your specific label
-          PR_LABELS="${{ github.event.pull_request.labels.*.name }}"
+          PR_LABELS="${{ github.event.pull_request.labels.*.LABEL_NAME }}"
           if echo "${PR_LABELS[@]}" | grep -q -w "$LABEL_NAME"; then
             echo "Specific label is present. Continue with workflow..."
             # Continue with your workflow steps here

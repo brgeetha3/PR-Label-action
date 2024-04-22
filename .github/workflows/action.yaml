@@ -1,28 +1,25 @@
-name: "Regression Testing"
+name: "Run on Specific Label"
 on:
   pull_request:
     types:
       - labeled
-      - unlabeled
-      
+
 jobs:
-  test:
+  run-on-label:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         if: github.event.pull_request.merged == true
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
+        uses: actions/checkout@v2
 
-      - name: Run tests
+      - name: Check for label
         run: |
-          LABEL_NAME="Regression Testing"
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          LABELS_JSON=$(gh pr view $PR_NUMBER --json labels -q '.labels[].name')
-          if echo "$LABELS_JSON" | grep -q "$LABEL_NAME"; then
-            echo "Running regression tests..."
-            # Run your tests here
+          LABEL_NAME="Regression Testing"  # Replace with your specific label
+          PR_LABELS="${{ github.event.pull_request.labels.*.name }}"
+          if echo "${PR_LABELS[@]}" | grep -q -w "$LABEL_NAME"; then
+            echo "Specific label is present. Continue with workflow..."
+            # Continue with your workflow steps here
           else
-            echo "Skipping regression tests..."
+            echo "Specific label is not present. Skipping workflow..."
+            exit 78
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

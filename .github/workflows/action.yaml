@@ -1,28 +1,24 @@
-name: "Regression Testing"
+name: "PR Label Validation"
 on:
   pull_request:
     types:
+      - opened
       - labeled
-      - unlabeled
-      
+
 jobs:
-  test:
+  check-labels:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        if: github.event.pull_request.merged == true
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
+        uses: actions/checkout@v2
 
-      - name: Run tests
+      - name: Validate labels
         run: |
-          LABEL_NAME="Regression Testing"
+          REQUIRED_LABELS=("Regression Testing")  # Replace with your required labels
           PR_NUMBER=${{ github.event.pull_request.number }}
           LABELS_JSON=$(gh pr view $PR_NUMBER --json labels -q '.labels[].name')
-          if echo "$LABELS_JSON" | grep -q "$LABEL_NAME"; then
-            echo "Running regression tests..."
-            # Run your tests here
-          else
-            echo "Skipping regression tests..."
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          for LABEL in "${REQUIRED_LABELS[@]}"; do
+            if ! echo "$LABELS_JSON" | grep -q "$LABEL"; then
+              echo "error: required label \"$LABEL\" is missing."
+              exit 1
+            fi

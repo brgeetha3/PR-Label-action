@@ -13,9 +13,9 @@ jobs:
 
       - name: Check for label
         run: |
-          LABEL_NAME="regression-testing"  # Replace with your specific label
+         # LABEL_NAME="regression-testing"  # Replace with your specific label
           PR_LABELS="${{ github.event.pull_request.labels.*.name }}"
-          if echo "${PR_LABELS[@]}" | grep -q -w "$LABEL_NAME"; then
+          if echo "${PR_LABELS[@]}" | grep -q -w "$regression-testing"; then
             echo "Regression Testing label is present. Continue with workflow..."
             # Continue with your workflow steps here
           else

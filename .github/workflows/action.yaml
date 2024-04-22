@@ -8,14 +8,15 @@ jobs:
   label_trigger:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
       - name: Check if PR has specific label
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'regression-test') }}
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'regression-testing') }}
         run: |
           # Your workflow steps here
           echo "The PR has the specified label. Triggering actions..."
  
       - name: Fail if label is not present
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'regression-test') }}
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'regression-testing') }}
         run: |
           echo "The PR does not have the specified label. Failing workflow..."
           exit 1

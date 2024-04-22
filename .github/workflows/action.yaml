@@ -4,8 +4,7 @@ on:
     types:
       - labeled
       - unlabeled
-      - closed
-
+      
 jobs:
   test:
     runs-on: ubuntu-latest

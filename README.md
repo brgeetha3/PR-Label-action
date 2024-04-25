@@ -1,2 +1,2 @@
-# PR-Label
+# PR-Labels
 

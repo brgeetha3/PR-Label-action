@@ -1,24 +1,19 @@
-name: PR Check
+name: Check PR Body
 
 on:
   pull_request:
     types: [opened]
-    
+
 jobs:
-  check:
+  check-body:
     runs-on: ubuntu-latest
     steps:
-      - name: Check label and description
-        run: |
-          PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
-          LABELS=$(curl --silent --show-error --location --header "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" | jq -r '.[].name')
-          DESCRIPTION=$(curl --silent --show-error --location --header "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | jq -r '.body')
-
-          if [[ $LABELS =~ "Sanity Testing" ]] && [[ $DESCRIPTION =~ name\ *:\ *\".*\" ]] && ! [[ $DESCRIPTION =~ name\ *:\ *\"\" ]]; then
-            echo "Checks passed"
-          else
-            echo "Checks failed"
-            exit 1
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Check for name
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const body = github.context.payload.pull_request.body
+          const name = body.match(/name:\s*\*(.+)\*/i)
+          if (!name || !name[1]) {
+            throw new Error('Name is missing in the PR body')
+          }

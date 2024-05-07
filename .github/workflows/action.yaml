@@ -14,7 +14,7 @@ jobs:
           LABELS=$(curl --silent --show-error --location --header "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" | jq -r '.[].name')
           DESCRIPTION=$(curl --silent --show-error --location --header "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | jq -r '.body')
 
-          if [[ $LABELS =~ "sanity-testing" ]] && [[ -n $DESCRIPTION ]]; then
+          if [[ $LABELS =~ "Sanity Testing" ]] && [[ -n $DESCRIPTION ]]; then
             echo "Checks passed"
           else
             echo "Checks failed"

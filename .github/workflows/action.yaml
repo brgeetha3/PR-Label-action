@@ -8,13 +8,20 @@ jobs:
   check-body:
     runs-on: ubuntu-latest
     steps:
-    - name: Check for name
-      uses: actions/github-script@v5
+    - name: Get PR body
+      id: pr
+      uses: octokit/request-action@v2.x
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const body = github.context.payload.pull_request.body
-          const name = body.match(/name:\s*\*(.+)\*/i)
-          if (!name || !name[1]) {
-            throw new Error('Name is missing in the PR body')
-          }
+        route: GET /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}
+        mediaType: application/vnd.github.v3+json
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check for name
+      run: |
+        BODY="${{ fromJson(steps.pr.outputs.data).body }}"
+        NAME=$(echo "$BODY" | grep -oP 'name:\s*\*\K(.+?)(?=\*)')
+        if [ -z "$NAME" ]; then
+          echo "Name is missing in the PR body"
+          exit 1
+        fi

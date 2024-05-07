@@ -1,4 +1,3 @@
-name: a
 namespace: b 
 
 

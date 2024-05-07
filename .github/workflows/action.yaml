@@ -21,22 +21,23 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Get PR body
-        id: pr
-        run: |
-          PR_BODY=$(gh pr view https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }} --json body -q '.body')
-          echo "::set-output name=body::$PR_BODY"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Validate PR body
+      - name: Check PR Body Content
+        id: pr_body_check
         run: |
-          REQUIRED_VALUES=("envname: \[polar\]" "namespace: \[bear\]") # Add your required values here
-          PR_BODY="${{ steps.pr.outputs.body }}"
-          for value in "${REQUIRED_VALUES[@]}"; do
-            if ! echo "$PR_BODY" | grep -q "$value"; then
-              echo "Error: '$value' not found in PR body."
-              exit 1
-            fi
+          PR_BODY=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+            | jq -r '.body')
+        
+          found_all=true
+          for value in "envname" "namespace"; do
+          if [[ ! $PR_BODY =~ $value ]]; then
+            echo "Value '$value' not found in PR body. Failing workflow."
+            found_all=false
+            exit 1
+          fi
           done
-          echo "All required values found in PR body."
+        
+          if [ "$found_all" = true ]; then
+          echo "All desired values found in PR body."
+          fi

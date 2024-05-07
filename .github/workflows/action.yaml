@@ -1,26 +1,47 @@
-name: PR Label Trigger
- 
+name: Update PR Body
+
 on:
   pull_request:
     types:
       - labeled
-      - closed
- 
+
 jobs:
-  label_trigger:
-    name: excute-test-cases
-    if: github.event.pull_request.merged == true
+  update-pr-body:
     runs-on: ubuntu-latest
+    if: github.event.label.name == 'sanity testing'
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
-      - name: Check if PR has specific label
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'Sanity Testing') }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install yq
         run: |
-          # Your workflow steps here
-          echo "The PR has the specified label. Triggering actions..."
- 
-      - name: Fail if label is not present
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'Sanity Testing') }}
+          sudo add-apt-repository ppa:rmescandon/yq
+          sudo apt update
+          sudo apt install yq -y
+
+      - name: Get values from YAML file
+        id: get-values
         run: |
-          echo "The PR does not have the specified label. Failing workflow..."
-          exit 1
+          NAME=$(yq e '.metadata.name' new.yaml)
+          NAMESPACE=$(yq e '.metadata.namespace' new.yaml)
+          echo "::set-output name=name::$NAME"
+          echo "::set-output name=namespace::$NAMESPACE"
+
+      - name: Update PR body
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pullRequest } = await github.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            pullRequest.body += "\n\nThe name from the file is: " + "${{ steps.get-values.outputs.name }}";
+            pullRequest.body += "\n\nThe namespace from the file is: " + "${{ steps.get-values.outputs.namespace }}";
+            await github.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: pullRequest.body
+            });

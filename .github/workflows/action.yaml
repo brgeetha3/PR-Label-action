@@ -31,9 +31,9 @@ jobs:
 
       - name: Validate PR body
         run: |
-          REQUIRED_VALUES=("name:" "namespace:")
+          REQUIRED_VALUES=("namespace:")
           for value in "${REQUIRED_VALUES[@]}"; do
-            if ! echo "${{ steps.pr.outputs.body }}" | grep -q "$value"; then
+            if ! echo "#Update the contents" | grep -q "$value"; then
               echo "Error: '$value' not found in PR body."
               exit 1
             fi

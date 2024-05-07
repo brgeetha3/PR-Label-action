@@ -1,47 +1,32 @@
-name: Update PR Body
-
+name: Update PR Description
+ 
 on:
   pull_request:
-    types:
-      - labeled
-
+    types: [opened, edited, synchronize]
+ 
 jobs:
-  update-pr-body:
+  update_pr_description:
     runs-on: ubuntu-latest
-    if: github.event.label.name == 'sanity testing'
+ 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Install yq
+ 
+      - name: Extract values from file
         run: |
-          sudo add-apt-repository ppa:rmescandon/yq
-          sudo apt update
-          sudo apt install yq -y
-
-      - name: Get values from YAML file
-        id: get-values
-        run: |
-          NAME=$(yq e '.metadata.name' new.yaml)
-          NAMESPACE=$(yq e '.metadata.namespace' new.yaml)
-          echo "::set-output name=name::$NAME"
-          echo "::set-output name=namespace::$NAMESPACE"
-
-      - name: Update PR body
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { data: pullRequest } = await github.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-            pullRequest.body += "\n\nThe name from the file is: " + "${{ steps.get-values.outputs.name }}";
-            pullRequest.body += "\n\nThe namespace from the file is: " + "${{ steps.get-values.outputs.namespace }}";
-            await github.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              body: pullRequest.body
-            });
+          # Extract name and namespace from your file (replace commands with actual commands for your file)
+          name=$(grep "name" file.txt | awk '{print $2}')
+          namespace=$(grep "namespace" file.txt | awk '{print $2}')
+ 
+          # Update PR description with extracted values
+          sed -i "s/{NAME}/${name}/g" $GITHUB_EVENT_PATH
+          sed -i "s/{NAMESPACE}/${namespace}/g" $GITHUB_EVENT_PATH
+ 
+          # Get PR number
+          PR_NUMBER=$(jq --raw-output .number "$GITHUB_EVENT_PATH")
+          # Update PR body using GitHub API
+          curl -X PATCH \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER} \
+            -d "{\"body\": \"Updated PR body with values extracted from file:\n\n- Name: ${name}\n- Namespace: ${namespace}\"}"

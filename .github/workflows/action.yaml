@@ -20,7 +20,7 @@ jobs:
     - name: Check for name
       run: |
         BODY="${{ fromJson(steps.pr.outputs.data).body }}"
-        NAME=$(echo "$BODY" | grep -oP 'name:\s*\*\K(.+?)(?=\*)')
+        NAME=$(echo "$BODY" | grep -o 'name: \*[^*]*\*' | grep -o '\*[^*]*\*' | tr -d '*')
         if [ -z "$NAME" ]; then
           echo "Name is missing in the PR body"
           exit 1

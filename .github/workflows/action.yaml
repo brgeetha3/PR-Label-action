@@ -11,6 +11,7 @@ jobs:
     - name: Check for name
       uses: actions/github-script@v5
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const body = github.context.payload.pull_request.body
           const name = body.match(/name:\s*\*(.+)\*/i)

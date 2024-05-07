@@ -32,8 +32,9 @@ jobs:
       - name: Validate PR body
         run: |
           REQUIRED_VALUES=("envname: \[polar\]" "namespace: \[bear\]") # Add your required values here
+          PR_BODY="${{ steps.pr.outputs.body }}"
           for value in "${REQUIRED_VALUES[@]}"; do
-            if ! echo "${{ steps.pr.outputs.body }}" | grep -q "$value"; then
+            if ! echo "$PR_BODY" | grep -q "$value"; then
               echo "Error: '$value' not found in PR body."
               exit 1
             fi
